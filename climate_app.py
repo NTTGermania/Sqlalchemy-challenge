@@ -29,6 +29,7 @@ app = Flask(__name__)
 def home():
     print("server received request for Hawaii weather information page...")
     return ("Welcome to my Hawaii weather information page <br/>"
+        f"For any temperature inquiries, please enter any dates between 2010-01-01 and 2017-08-27 in the yyyy-mm-dd format in place of 'start' and/or 'end' <br/>"
         f"Available Routes:<br/>"
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
@@ -44,11 +45,10 @@ def precipitation():
 
     prcp_results = session.query(Measurement.date,Measurement.prcp).all()
 
-    session.close()
+    prcp_dict = [{result.date : result.prcp} for result in prcp_results]
+    
 
-    weather_data_ls = list(np.ravel(prcp_results))
-
-    return jsonify(weather_data_ls)
+    return jsonify(prcp_dict)
 @app.route("/api/v1.0/stations")
 def stations():
 
@@ -92,30 +92,30 @@ def start_end(start, end = None):
     if (end != None):
         end = datetime.strptime(end,'%Y-%m-%d')
         tavg = session.query(func.avg(Measurement.tobs))\
-        .filter(Measurement.date.between(start,end)).all()
+        .filter(Measurement.date.between(start,end)).all()[0][0]
         tmin = session.query(func.min(Measurement.tobs))\
-        .filter(Measurement.date.between(start,end)).all()
+        .filter(Measurement.date.between(start,end)).all()[0][0]
         tmax = session.query(func.max(Measurement.tobs))\
-        .filter(Measurement.date.between(start,end)).all()
+        .filter(Measurement.date.between(start,end)).all()[0][0]
         output = ( ['Entered start date: ' + str(start),
-            'The lowest temperature was ' + str(tmin) + '  °F',
-            'The average temperature was ' + str(tavg) + ' °F',
-            'The highest temperature was ' + str(tmax) + ' °F'])
+            'The lowest temperature was ' + str(tmin) + '°F',
+            'The average temperature was ' + str(round(tavg,2)) + '°F',
+            'The highest temperature was ' + str(tmax) + '°F'])
         return jsonify(output)
     
     
     tavg = session.query(func.avg(Measurement.tobs))\
-    .filter(Measurement.date >= start).all()
+    .filter(Measurement.date >= start).all()[0][0]
     tmin = session.query(func.min(Measurement.tobs))\
-    .filter(Measurement.date >= start).all()
+    .filter(Measurement.date >= start).all()[0][0]
     tmax = session.query(func.max(Measurement.tobs))\
-    .filter(Measurement.date >= start).all()
+    .filter(Measurement.date >= start).all()[0][0]
     
     output = ( ['Entered start date: ' + str(start),
             'Entered end date: ' + str(end),
-            'The lowest temperature was ' + str(tmin) + '  °F',
-            'The average temperature was ' + str(tavg) + ' °F',
-            'The highest temperature was ' + str(tmax) + ' °F'])
+            'The lowest temperature was ' + str(tmin) + '°F',
+            'The average temperature was ' + str(round(tavg,2)) + '°F',
+            'The highest temperature was ' + str(tmax) + '°F'])
     return jsonify(output)
    
 if __name__ == "__main__":
