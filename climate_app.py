@@ -29,7 +29,7 @@ app = Flask(__name__)
 def home():
     print("server received request for Hawaii weather information page...")
     return ("Welcome to my Hawaii weather information page <br/>"
-        f"For any temperature inquiries, please enter any dates between 2010-01-01 and 2017-08-27 in the yyyy-mm-dd format in place of 'start' and/or 'end' <br/>"
+        f"For any temperature inquiries, please enter any dates between 2010-01-01 and 2017-08-23 in the yyyy-mm-dd format in place of 'start' and/or 'end' <br/>"
         f"Available Routes:<br/>"
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
@@ -98,9 +98,11 @@ def start_end(start, end = None):
         tmax = session.query(func.max(Measurement.tobs))\
         .filter(Measurement.date.between(start,end)).all()[0][0]
         output = ( ['Entered start date: ' + str(start),
+            'Entered end date: ' + str(end),
             'The lowest temperature was ' + str(tmin) + '°F',
             'The average temperature was ' + str(round(tavg,2)) + '°F',
             'The highest temperature was ' + str(tmax) + '°F'])
+        session.close()
         return jsonify(output)
     
     
@@ -112,11 +114,10 @@ def start_end(start, end = None):
     .filter(Measurement.date >= start).all()[0][0]
     
     output = ( ['Entered start date: ' + str(start),
-            'Entered end date: ' + str(end),
             'The lowest temperature was ' + str(tmin) + '°F',
             'The average temperature was ' + str(round(tavg,2)) + '°F',
             'The highest temperature was ' + str(tmax) + '°F'])
-    return jsonify(output)
-   
+    session.close()
+    return jsonify(output)   
 if __name__ == "__main__":
     app.run(debug=True)
